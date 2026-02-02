@@ -1,5 +1,5 @@
 name: Task Manager DevSecOps
-run-name: ${{ github.actor }} is running this pipeline
+run-name: ${{ github.actor }}'s pipeline
 on: [push]
 
 jobs:
@@ -7,8 +7,6 @@ jobs:
   Backend:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Running ${{ github.jobs.Backend.name }} job"
-
       - name: Checkout repository code
         uses: actions/checkout@v5
 
@@ -17,7 +15,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.13'
 
       - name: Install dependencies
         run: |
@@ -30,8 +28,6 @@ jobs:
   Frontend:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Running ${{ github.jobs.Frontend.name }} job"
-
       - name: Checkout repository code
         uses: actions/checkout@v5
 
