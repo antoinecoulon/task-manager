@@ -16,8 +16,3 @@ repos:
     -   id: ruff-check
         args: [ --fix ]
     -   id: ruff-format
-
--   repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v9.39.1
-    hooks:
-    -   id: eslint
