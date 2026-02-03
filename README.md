@@ -1,5 +1,7 @@
 # Task Manager
 
+[![Task Manager DevSecOps](https://github.com/antoinecoulon/task-manager/actions/workflows/ci-cd.yaml/badge.svg)](https://github.com/antoinecoulon/task-manager/actions/workflows/ci-cd.yaml)
+
 ## Installation & usage
 
 ### Backend
