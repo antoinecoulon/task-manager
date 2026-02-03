@@ -71,5 +71,8 @@ jobs:
       run:
         working-directory: backend
     steps:
+      - uses: actions/checkout@v5
       - name: Lint Dockerfile
-        run: docker run --rm -i hadolint/hadolint < Dockerfile
+        uses: hadolint/hadolint-action@master
+        with:
+          dockerfile: "Dockerfile"
