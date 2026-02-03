@@ -13,33 +13,30 @@ jobs:
 
   Backend:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
     steps:
       - name: Checkout repository code
         uses: actions/checkout@v5
-
-      - run: cd backend/
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-
       - name: Install dependencies
         run: |
-          cd backend/
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-
       - run: echo "Backend successfully setup"
 
   Frontend:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
     steps:
       - name: Checkout repository code
         uses: actions/checkout@v5
-
-      - run: cd frontend/
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -49,11 +46,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
-
-      - run: |
-          cd backend
-          pip install -r requirements.txt
-
+      - name: Install dependencies
+        working-directory: backend
+        run: pip install -r requirements.txt
       - name: Run Snyk to check Node security vulnerabilities
         uses: snyk/actions/node@master
         continue-on-error: true
@@ -61,7 +56,6 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           args: --file=backend/requirements.txt
-
       - name: Run Snyk to check Python security vulnerabilities
         uses: snyk/actions/python@master
         continue-on-error: true
@@ -70,3 +64,12 @@ jobs:
         with:
           command: code test
           args: --all-projects
+
+  Docker:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Lint Dockerfile
+        run: docker run --rm -i hadolint/hadolint < Dockerfile
