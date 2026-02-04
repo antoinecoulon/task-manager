@@ -1,6 +1,7 @@
 name: Task Manager DevSecOps
 run-name: ${{ github.actor }}'s pipeline
 on: [push]
+permissions: read-all
 
 jobs:
 
