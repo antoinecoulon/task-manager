@@ -76,3 +76,9 @@ jobs:
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: "backend/Dockerfile"
+      - name: Setup Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      - name: Tests with Checkov
+        uses: bridgecrewio/checkov-action@v12
