@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.12-slim@sha256:df3b7c223e6fee2bd45166f5ebd3fd9d2c09d5e5f8b62b36f4c5d72fc63dc8a1
 
 # Checkov test
 RUN useradd -m appuser
