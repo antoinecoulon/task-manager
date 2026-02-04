@@ -14,9 +14,14 @@ engine = create_engine(
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+""" Classe base non utilisée """
+
 
 class Base(DeclarativeBase):
     pass
+
+
+""" Crée la db et gère proprement sa fermeture """
 
 
 def get_db() -> Generator[Session, None, None]:
