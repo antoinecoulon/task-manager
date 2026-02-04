@@ -93,6 +93,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
+          context: ./backend
+          file: ./backend/Dockerfile
           push: true
           tags: antoinecoulon/task-manager:backend-latest
 
@@ -124,5 +126,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
           push: true
           tags: antoinecoulon/task-manager:frontend-latest
