@@ -1,5 +1,9 @@
 FROM python:3.12-slim
 
+# Checkov test
+RUN useradd -m appuser
+USER appuser
+
 WORKDIR /app
 COPY . /app/
 
