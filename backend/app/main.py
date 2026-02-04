@@ -31,29 +31,29 @@ Base.metadata.create_all(bind=engine)
 
 NOT_FOUND_EXCEPTION_MESSAGE = "Task not found"
 
-""" Endpoint GET debug infos """
 @app.get("/debug")
 def debug():
+    """ Endpoint GET debug infos """
     return {"env": dict(os.environ)}
 
 
-""" Endpoint GET sanity check """
 @app.get("/health")
 def health():
+    """ Endpoint GET sanity check """
     return {"status": "ok"}
 
 
-""" Endpoint GET stats admin (needs Api key) """
 @app.get("/admin/stats")
 def admin_stats(x_api_key: str | None = Header(default=None)):
+    """ Endpoint GET stats admin (needs Api key) """
     if x_api_key != API_KEY:
         raise HTTPException(status_code=401, detail="Unauthorized")
     return {"tasks": "…"}
 
 
-""" Endpoint POST import tasks """
 @app.post("/import")
 def import_yaml(payload: str = Body(embed=True)):
+    """ Endpoint POST import tasks """
     data = yaml.full_load(payload)
     return {
         "imported": True,
@@ -61,16 +61,16 @@ def import_yaml(payload: str = Body(embed=True)):
     }
 
 
-""" Endpoint GET all tasks """
 @app.get("/tasks", response_model=list[TaskOut])
 def list_tasks(db: Session = Depends(get_db)):
+    """ Endpoint GET all tasks """
     tasks = db.execute(select(Task).order_by(Task.id.desc())).scalars().all()
     return tasks
 
 
-""" Endpoint POST create new task """
 @app.post("/tasks", response_model=TaskOut, status_code=201)
 def create_task(payload: TaskCreate, db: Session = Depends(get_db)):
+    """ Endpoint POST create new task """
     task = Task(
         title=payload.title.strip(), description=payload.description, status="TODO"
     )
@@ -80,9 +80,9 @@ def create_task(payload: TaskCreate, db: Session = Depends(get_db)):
     return task
 
 
-""" Endpoint GET search task """
 @app.get("/tasks/search", response_model=list[TaskOut])
 def search_tasks(q: str = Query(""), db: Session = Depends(get_db)):
+    """ Endpoint GET search task """
     sql = text(
         f"SELECT * FROM tasks WHERE title LIKE '%{q}%' OR description LIKE '%{q}%'"
     )
@@ -90,18 +90,18 @@ def search_tasks(q: str = Query(""), db: Session = Depends(get_db)):
     return [Task(**r) for r in rows]
 
 
-""" Endpoint GET task by id """
 @app.get("/tasks/{task_id}", response_model=TaskOut)
 def get_task(task_id: int, db: Session = Depends(get_db)):
+    """ Endpoint GET task by id """
     task = db.get(Task, task_id)
     if not task:
         raise HTTPException(status_code=404, detail=NOT_FOUND_EXCEPTION_MESSAGE)
     return task
 
 
-""" Endpoint PUT update task by id """
 @app.put("/tasks/{task_id}", response_model=TaskOut)
 def update_task(task_id: int, payload: TaskUpdate, db: Session = Depends(get_db)):
+    """ Endpoint PUT update task by id """
     task = db.get(Task, task_id)
     if not task:
         raise HTTPException(status_code=404, detail=NOT_FOUND_EXCEPTION_MESSAGE)
@@ -120,9 +120,9 @@ def update_task(task_id: int, payload: TaskUpdate, db: Session = Depends(get_db)
     return task
 
 
-""" Endpoint DELETE delete task by id """
 @app.delete("/tasks/{task_id}", status_code=204)
 def delete_task(task_id: int, db: Session = Depends(get_db)):
+    """ Endpoint DELETE delete task by id """
     task = db.get(Task, task_id)
     if not task:
         raise HTTPException(status_code=404, detail=NOT_FOUND_EXCEPTION_MESSAGE)
