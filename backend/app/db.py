@@ -1,3 +1,5 @@
+"""Module création et gestion de la DB"""
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase, Session, Generator
 
@@ -6,7 +8,8 @@ DATABASE_URL = "sqlite:///./taskmanager.db"
 
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False},  # needed for SQLite + threads
+    # needed for SQLite + threads
+    connect_args={"check_same_thread": False},
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
