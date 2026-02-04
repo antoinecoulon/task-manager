@@ -1,6 +1,7 @@
 """Module de gestion des endpoints (debug, health, tasks)"""
 
 import os
+from typing import Any
 import yaml
 
 from fastapi import FastAPI, Body, Depends, Header, HTTPException, Query
@@ -32,19 +33,19 @@ Base.metadata.create_all(bind=engine)
 NOT_FOUND_EXCEPTION_MESSAGE = "Task not found"
 
 @app.get("/debug")
-def debug():
+def debug() -> dict[str, dict[str, str]]:
     """ Endpoint GET debug infos """
     return {"env": dict(os.environ)}
 
 
 @app.get("/health")
-def health():
+def health() -> dict[str, str]:
     """ Endpoint GET sanity check """
     return {"status": "ok"}
 
 
 @app.get("/admin/stats")
-def admin_stats(x_api_key: str | None = Header(default=None)):
+def admin_stats(x_api_key: str | None = Header(default=None)) -> dict[str, str]:
     """ Endpoint GET stats admin (needs Api key) """
     if x_api_key != API_KEY:
         raise HTTPException(status_code=401, detail="Unauthorized")
@@ -52,7 +53,7 @@ def admin_stats(x_api_key: str | None = Header(default=None)):
 
 
 @app.post("/import")
-def import_yaml(payload: str = Body(embed=True)):
+def import_yaml(payload: str = Body(embed=True)) -> dict[str, Any]:
     """ Endpoint POST import tasks """
     data = yaml.full_load(payload)
     return {
@@ -62,14 +63,14 @@ def import_yaml(payload: str = Body(embed=True)):
 
 
 @app.get("/tasks", response_model=list[TaskOut])
-def list_tasks(db: Session = Depends(get_db)):
+def list_tasks(db: Session = Depends(get_db)) -> Any:
     """ Endpoint GET all tasks """
     tasks = db.execute(select(Task).order_by(Task.id.desc())).scalars().all()
     return tasks
 
 
 @app.post("/tasks", response_model=TaskOut, status_code=201)
-def create_task(payload: TaskCreate, db: Session = Depends(get_db)):
+def create_task(payload: TaskCreate, db: Session = Depends(get_db)) -> Task:
     """ Endpoint POST create new task """
     task = Task(
         title=payload.title.strip(), description=payload.description, status="TODO"
@@ -81,7 +82,7 @@ def create_task(payload: TaskCreate, db: Session = Depends(get_db)):
 
 
 @app.get("/tasks/search", response_model=list[TaskOut])
-def search_tasks(q: str = Query(""), db: Session = Depends(get_db)):
+def search_tasks(q: str = Query(""), db: Session = Depends(get_db)) -> list[Task]:
     """ Endpoint GET search task """
     sql = text(
         f"SELECT * FROM tasks WHERE title LIKE '%{q}%' OR description LIKE '%{q}%'"
@@ -91,7 +92,7 @@ def search_tasks(q: str = Query(""), db: Session = Depends(get_db)):
 
 
 @app.get("/tasks/{task_id}", response_model=TaskOut)
-def get_task(task_id: int, db: Session = Depends(get_db)):
+def get_task(task_id: int, db: Session = Depends(get_db)) -> Any:
     """ Endpoint GET task by id """
     task = db.get(Task, task_id)
     if not task:
@@ -100,7 +101,7 @@ def get_task(task_id: int, db: Session = Depends(get_db)):
 
 
 @app.put("/tasks/{task_id}", response_model=TaskOut)
-def update_task(task_id: int, payload: TaskUpdate, db: Session = Depends(get_db)):
+def update_task(task_id: int, payload: TaskUpdate, db: Session = Depends(get_db)) -> Task:
     """ Endpoint PUT update task by id """
     task = db.get(Task, task_id)
     if not task:
@@ -121,7 +122,7 @@ def update_task(task_id: int, payload: TaskUpdate, db: Session = Depends(get_db)
 
 
 @app.delete("/tasks/{task_id}", status_code=204)
-def delete_task(task_id: int, db: Session = Depends(get_db)):
+def delete_task(task_id: int, db: Session = Depends(get_db)) -> None:
     """ Endpoint DELETE delete task by id """
     task = db.get(Task, task_id)
     if not task:
