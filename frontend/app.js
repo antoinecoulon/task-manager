@@ -7,7 +7,9 @@ async function api(path, options = {}) {
 		headers: { "Content-Type": "application/json" },
 		...options,
 	});
-	if (res.status === 204) return null;
+	if (res.status === 204) {
+		return null;
+	}
 	if (!res.ok) {
 		const body = await res.json().catch(() => ({}));
 		throw new Error(body.detail || `HTTP ${res.status}`);
