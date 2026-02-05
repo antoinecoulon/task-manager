@@ -5,7 +5,7 @@ Une documentation non-exhaustive des différents outils utilisés lors de la for
 ## Outils utilisés
 
 * Pre-commit
-* Sonarqube
+* Sonarqube Cloud
 * Docker
 * Snyk
 * Hadolint
