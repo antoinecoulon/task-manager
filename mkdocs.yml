@@ -1,2 +1,10 @@
 site_name: Documentation DevSecOps ENI
-theme: readthedocs
+site_description: Une documentation non-exhaustive des différents outils utilisés lors de la formation DevSecOps à l'ENI.
+site_author: Antoine Coulon
+copyright: Antoine Coulon &copy; 2026 ENI
+repo_url: https://github.com/antoinecoulon/task-manager#
+nav:
+  - Home: index.md
+  - About: about.md
+theme:
+  name: dracula

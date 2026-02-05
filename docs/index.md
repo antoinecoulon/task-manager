@@ -1,17 +1,197 @@
-# Welcome to MkDocs
+# Documentation DevSecOps
 
-For full documentation visit [mkdocs.org](https://www.mkdocs.org).
+Une documentation non-exhaustive des différents outils utilisés lors de la formation DevSecOps à l'ENI.
 
-## Commands
+## Outils utilisés
 
-* `mkdocs new [dir-name]` - Create a new project.
-* `mkdocs serve` - Start the live-reloading docs server.
-* `mkdocs build` - Build the documentation site.
-* `mkdocs -h` - Print help message and exit.
+* Pre-commit
+* Sonarqube
+* Docker
+* Snyk
+* Hadolint
+* Checkov
+
+Sonarqube dashboard : [link](https://sonarqube.formations-eni.pwet.org/dashboard?id=task-manager-acoulon&codeScope=overall)
+
+Pre-commit, Snyk, Hadolint et Checkov sont tous intégrés à la pipeline CI/CD pour renforcer la sécurité et la qualité du code.
+
+Le projet est contenarisé avec Docker et les images sont disponibles sur Docker Hub : [link](https://hub.docker.com/repository/docker/antoinecoulon/task-manager)
 
 ## Project layout
 
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files.
+```text
+├── backend
+│   ├── app
+│   │   ├── db.py
+│   │   ├── main.py
+│   │   ├── models.py
+│   │   └── schemas.py
+│   ├── Dockerfile
+│   └── requirements.txt
+├── docs
+│   ├── about.md
+│   └── index.md
+├── frontend
+│   ├── app.js
+│   ├── Dockerfile
+│   ├── index.html
+│   └── styles.css
+├── mkdocs.yml
+├── README.md
+└── sonar-project.properties
+```
+
+## CI/CD
+
+CI/CD avec GitHub Actions :
+
+```yaml
+name: Task Manager DevSecOps
+run-name: ${{ github.actor }}'s pipeline
+on: [push]
+permissions: read-all
+
+jobs:
+
+  Pre-Commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+      - uses: pre-commit/action@v3.0.1
+
+  Backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v5
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - run: echo "Backend successfully setup"
+
+  Frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v5
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+  Sonar:
+    runs-on: ubuntu-latest
+    needs: [Pre-Commit, Backend, Frontend]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+  Security:
+    runs-on: ubuntu-latest
+    needs: [Pre-Commit, Backend, Frontend]
+    steps:
+      - uses: actions/checkout@master
+      - name: Install dependencies
+        working-directory: backend
+        run: pip install -r requirements.txt
+      - name: Run Snyk to check Node security vulnerabilities
+        uses: snyk/actions/node@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --file=backend/requirements.txt
+      - name: Run Snyk to check Python security vulnerabilities
+        uses: snyk/actions/python@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: code test
+          args: --all-projects
+
+  Docker-Backend:
+    runs-on: ubuntu-latest
+    needs: [Sonar, Security]
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v3
+      - name: Lint Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: "backend/Dockerfile"
+      - name: Setup Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      - name: Tests with Checkov
+        uses: bridgecrewio/checkov-action@v12
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: antoinecoulon
+          password: ${{ secrets.DOCKER_TOKEN }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: antoinecoulon/task-manager:backend-latest
+
+
+  Docker-Frontend:
+    runs-on: ubuntu-latest
+    needs: [Sonar, Security]
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v3
+      - name: Lint Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: "frontend/Dockerfile"
+      - name: Setup Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      - name: Tests with Checkov
+        uses: bridgecrewio/checkov-action@v12
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: antoinecoulon
+          password: ${{ secrets.DOCKER_TOKEN }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: antoinecoulon/task-manager:frontend-latest
+
+```
